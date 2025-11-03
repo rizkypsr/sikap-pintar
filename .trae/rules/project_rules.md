@@ -1,0 +1,4 @@
+- always use shadcn ui for ui components
+- use inertia for frontend
+- always use useForm for form inertia
+- use spatie/permission for role based access control
