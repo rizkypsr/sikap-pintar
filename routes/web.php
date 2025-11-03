@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Categories (nested in departments)
         Route::resource('departments.categories', CategoryController::class)
-            ->only(['index', 'show', 'update', 'destroy']);
+            ->only(['index', 'show', 'store', 'update', 'destroy']);
 
         // Files (nested in categories)
         Route::resource('departments.categories.files', FileController::class)

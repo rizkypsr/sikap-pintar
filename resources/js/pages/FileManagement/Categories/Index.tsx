@@ -320,7 +320,7 @@ export default function Show({ department, categories, search: initialSearch = '
                                     Cancel
                                 </Button>
                                 <Button type="submit" disabled={editForm.processing}>
-                                    {editForm.processing ? 'Updating...' : 'Update Category'}
+                                    {editForm.processing ? 'Mengubah...' : 'Ubah'}
                                 </Button>
                             </DialogFooter>
                         </form>

@@ -29,7 +29,7 @@ class CategoryController extends Controller
     /**
      * Display the specified category with its files.
      */
-    public function show(Category $category, Department $department)
+    public function show(Department $department, Category $category)
     {
         $category->load('department');
 
@@ -97,7 +97,7 @@ class CategoryController extends Controller
     /**
      * Update the specified category in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Department $department, Category $category)
     {
         $request->validate([
             'name' => ['required', 'string', 'max:150'],
@@ -115,7 +115,7 @@ class CategoryController extends Controller
     /**
      * Remove the specified category from storage.
      */
-    public function destroy(Category $category)
+    public function destroy(Department $department, Category $category)
     {
         $category->delete();
 
