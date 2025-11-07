@@ -1,0 +1,17 @@
+.git/
+.github/
+.trae/
+.cursor/
+.env
+*.env*
+Dockerfile*
+docker-compose*.yml
+node_modules/
+bootstrap/cache/*
+storage/app/*
+storage/framework/cache/*
+storage/framework/views/*
+storage/logs/*
+database/*.sqlite
+tests/
+vendor/

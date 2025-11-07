@@ -3,6 +3,9 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FileController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -50,3 +53,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// Health check endpoint for production monitoring
+Route::get('/health', function () {
+    $status = [
+        'app' => 'ok',
+        'time' => now()->toISOString(),
+    ];
+
+    try {
+        DB::connection()->getPdo();
+        $status['db'] = 'ok';
+    } catch (\Throwable $e) {
+        $status['db'] = 'error';
+    }
+
+    try {
+        Redis::connection()->ping();
+        $status['redis'] = 'ok';
+    } catch (\Throwable $e) {
+        $status['redis'] = 'error';
+    }
+
+    try {
+        // Attempt a simple listing on S3 bucket root
+        $disk = Storage::disk('s3');
+        $disk->files('');
+        $status['s3'] = 'ok';
+    } catch (\Throwable $e) {
+        $status['s3'] = 'error';
+    }
+
+    return response()->json($status);
+})->name('health');

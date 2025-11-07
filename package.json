@@ -8,8 +8,14 @@
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
+
         "lint": "eslint . --fix",
-        "types": "tsc --noEmit"
+        "types": "tsc --noEmit",
+        "docker:prod:mysql": "docker compose -f ./docker-compose.prod.yml --project-directory . --profile mysql up -d --build",
+        "docker:prod:pgsql": "docker compose -f ./docker-compose.prod.yml --project-directory . --profile pgsql up -d --build",
+        "docker:prod:down": "docker compose -f ./docker-compose.prod.yml --project-directory . down -v",
+        "docker:prod:logs": "docker compose -f ./docker-compose.prod.yml --project-directory . logs -f app",
+        "docker:prod:config": "docker compose -f ./docker-compose.prod.yml --project-directory . config"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",

@@ -22,9 +22,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Seed roles first so subsequent seeders can assign roles
         $this->call([
-            DepartmentSeeder::class,
             RoleSeeder::class,
+            UserSeeder::class,
+            DepartmentSeeder::class,
         ]);
 
         $adminUser->assignRole('superadmin');

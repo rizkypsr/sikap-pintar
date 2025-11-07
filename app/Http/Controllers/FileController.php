@@ -102,8 +102,19 @@ class FileController extends Controller
                         'updated_by' => Auth::id(),
                     ]);
 
-                    // No collision, store file with original name
-                    $storagePath = $uploadedFile->storeAs('categories/'.$request->category_id.'/files', $finalFileName, 'public');
+                    // No collision, store file with original name in S3 (MinIO)
+                    $storageDirectory = 'categories/'.$request->category_id.'/files';
+                    $storagePath = $storageDirectory.'/'.$finalFileName;
+                    Storage::disk('s3')->putFileAs(
+                        $storageDirectory,
+                        $uploadedFile,
+                        $finalFileName,
+                        [
+                            'visibility' => 'public',
+                            'ContentType' => $mimeType,
+                            'ContentDisposition' => 'attachment; filename="'.$finalFileName.'"',
+                        ]
+                    );
 
                     Log::info('File uploaded successfully', [
                         'filename' => $originalName,
@@ -140,8 +151,19 @@ class FileController extends Controller
                             'updated_by' => Auth::id(),
                         ]);
 
-                        // Store file with new name
-                        $storagePath = $uploadedFile->storeAs('categories/'.$request->category_id.'/files', $finalFileName, 'public');
+                        // Store file with new name in S3 (MinIO)
+                        $storageDirectory = 'categories/'.$request->category_id.'/files';
+                        $storagePath = $storageDirectory.'/'.$finalFileName;
+                        Storage::disk('s3')->putFileAs(
+                            $storageDirectory,
+                            $uploadedFile,
+                            $finalFileName,
+                            [
+                                'visibility' => 'public',
+                                'ContentType' => $mimeType,
+                                'ContentDisposition' => 'attachment; filename="'.$finalFileName.'"',
+                            ]
+                        );
 
                         Log::info('Duplicate handled successfully', [
                             'original_filename' => $pathInfo['basename'],
@@ -166,11 +188,11 @@ class FileController extends Controller
                     ];
 
                     // Clean up uploaded file if exists
-                    if (isset($storagePath) && Storage::disk('public')->exists($storagePath)) {
+                    if (isset($storagePath) && Storage::disk('s3')->exists($storagePath)) {
                         Log::info('Cleaning up failed upload', [
                             'storage_path' => $storagePath,
                         ]);
-                        Storage::disk('public')->delete($storagePath);
+                        Storage::disk('s3')->delete($storagePath);
                     }
 
                     continue;
@@ -278,14 +300,21 @@ class FileController extends Controller
 
         $storagePath = $file->currentMetadata->storage_path;
 
-        if (! Storage::disk('public')->exists($storagePath)) {
+        if (! Storage::disk('s3')->exists($storagePath)) {
             abort(404, 'File not found');
         }
 
-        return response()->download(
-            Storage::disk('public')->path($storagePath),
-            $file->currentMetadata->filename
-        );
+        $stream = Storage::disk('s3')->readStream($storagePath);
+        if (! $stream) {
+            abort(404, 'File stream not available');
+        }
+
+        return response()->streamDownload(function () use ($stream) {
+            fpassthru($stream);
+        }, $file->currentMetadata->filename, [
+            'Content-Type' => $file->currentMetadata->mime_type,
+            'Content-Disposition' => 'attachment; filename="'.$file->currentMetadata->filename.'"',
+        ]);
     }
 
     public function destroy(File $file)
@@ -294,8 +323,8 @@ class FileController extends Controller
             DB::beginTransaction();
 
             // Delete physical file
-            if ($file->currentMetadata && Storage::disk('public')->exists($file->currentMetadata->storage_path)) {
-                Storage::disk('public')->delete($file->currentMetadata->storage_path);
+            if ($file->currentMetadata && Storage::disk('s3')->exists($file->currentMetadata->storage_path)) {
+                Storage::disk('s3')->delete($file->currentMetadata->storage_path);
             }
 
             // Delete file record (will cascade delete metadata)
