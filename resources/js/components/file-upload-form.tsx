@@ -23,10 +23,10 @@ export function FileUploadForm({ categoryId, onSuccess }: FileUploadFormProps) {
   });
 
   const validateFile = (file: File): string | null => {
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 50 * 1024 * 1024; // 50MB
 
     if (file.size > maxSize) {
-      return `File ${file.name} terlalu besar. Maksimal 20MB.`;
+      return `File ${file.name} terlalu besar. Maksimal 50MB.`;
     }
 
     return null;

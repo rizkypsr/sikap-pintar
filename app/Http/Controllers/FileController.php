@@ -43,7 +43,7 @@ class FileController extends Controller
 
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'required|file|max:20480', // 20MB in KB
+            'files.*' => 'required|file|max:51200', // 50MB in KB
             'category_id' => 'required|exists:categories,id',
         ]);
 

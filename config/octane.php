@@ -38,7 +38,24 @@ return [
     |
     */
 
-    'server' => env('OCTANE_SERVER', 'roadrunner'),
+    'server' => env('OCTANE_SERVER', 'frankenphp'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | FrankenPHP Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the FrankenPHP server settings.
+    |
+    */
+
+    'frankenphp' => [
+        'upload_max_filesize' => '50M',
+        'post_max_size' => '50M',
+        'request_body_max_size' => '50M',
+        'workers' => env('FRANKENPHP_WORKERS', 4),
+        'max_requests' => env('FRANKENPHP_MAX_REQUESTS', 1000),
+    ],
 
     /*
     |--------------------------------------------------------------------------

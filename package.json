@@ -11,11 +11,14 @@
 
         "lint": "eslint . --fix",
         "types": "tsc --noEmit",
-        "docker:prod:mysql": "docker compose -f ./docker-compose.prod.yml --project-directory . --profile mysql up -d --build",
-        "docker:prod:pgsql": "docker compose -f ./docker-compose.prod.yml --project-directory . --profile pgsql up -d --build",
-        "docker:prod:down": "docker compose -f ./docker-compose.prod.yml --project-directory . down -v",
+        "docker:prod": "docker compose -f ./docker-compose.prod.yml --env-file .env.production --project-directory . up -d --build",
+        "docker:prod:down": "docker compose -f ./docker-compose.prod.yml --project-directory . down",
         "docker:prod:logs": "docker compose -f ./docker-compose.prod.yml --project-directory . logs -f app",
-        "docker:prod:config": "docker compose -f ./docker-compose.prod.yml --project-directory . config"
+        "docker:prod:config": "docker compose -f ./docker-compose.prod.yml --project-directory . config",
+        "docker:prod:buildx": "docker buildx build --platform linux/amd64 -t dpmpstp_v2-app:prod -f .docker/Dockerfile .",
+        "docker:prod:tag": "docker tag dpmpstp_v2-app:prod rizkypsr/dpmptsp:latest",
+        "docker:prod:push": "docker push rizkypsr/dpmptsp:latest",
+        "docker:prod:buildx-tag-push": "docker buildx build --platform linux/amd64 -t rizkypsr/dpmptsp:latest -f .docker/Dockerfile . --push"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",

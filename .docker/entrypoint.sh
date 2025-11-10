@@ -1,32 +1,37 @@
-#!/usr/bin/env bash
-set -e
-
-# Optional wait for DB and Redis to be ready
-if [ "${WAIT_FOR_SERVICES:-true}" = "true" ]; then
-  if [ -n "${DB_HOST}" ]; then
-    echo "Waiting for database at ${DB_HOST}:${DB_PORT:-3306}..."
-    timeout 30 bash -c "until nc -z ${DB_HOST} ${DB_PORT:-3306}; do sleep 1; done" || true
-  fi
-  if [ -n "${REDIS_HOST}" ]; then
-    echo "Waiting for Redis at ${REDIS_HOST}:${REDIS_PORT:-6379}..."
-    timeout 30 bash -c "until nc -z ${REDIS_HOST} ${REDIS_PORT:-6379}; do sleep 1; done" || true
-  fi
-fi
+#!/bin/sh
+set -eu
 
 cd /app
 
-# Ensure storage permissions
-chown -R www-data:www-data storage bootstrap/cache || true
+echo "🚀 Starting Laravel Octane container..."
 
-# Storage symlink (idempotent)
-php -d variables_order=EGPCS artisan storage:link || true
-
-# Optimize caches (safe even if already cached)
-php -d variables_order=EGPCS artisan optimize || true
-
-# Run migrations if enabled
-if [ "${RUN_MIGRATIONS}" = "true" ]; then
-  php -d variables_order=EGPCS artisan migrate --force || true
+# Tunggu sebentar jika DB service belum siap (opsional, bisa dihapus kalau sudah pakai healthcheck di compose)
+if [ "${WAIT_FOR_DB:-true}" = "true" ]; then
+  echo "⏳ Waiting for database to be ready..."
+  for i in $(seq 1 10); do
+    php -r "try { new PDO(getenv('DB_CONNECTION') . ':host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); exit(0); } catch (Exception \$e) { exit(1); }" && break || sleep 3
+  done
 fi
 
-exec "$@"
+# Jalankan cache hanya di production
+if [ "${APP_ENV:-local}" = "production" ]; then
+  echo "🧩 Caching Laravel config, routes, and views..."
+  php artisan config:clear || true
+  php artisan route:clear || true
+  php artisan view:clear || true
+  php artisan config:cache || true
+  php artisan route:cache || true
+  php artisan view:cache || true
+fi
+
+# Fix permissions for Octane/FrankenPHP
+chown -R www-data:www-data /app/public /app/storage /app/bootstrap/cache /tmp
+chmod -R 755 /app/public
+chmod -R 777 /tmp
+
+# Create necessary directories
+mkdir -p /tmp/php-uploads
+chmod 777 /tmp/php-uploads
+
+echo "✅ Starting supervisord..."
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf

@@ -119,7 +119,7 @@ export default function FilesIndex({ category, files }: FilesIndexProps) {
                             <DialogHeader>
                                 <DialogTitle>Upload File</DialogTitle>
                                 <DialogDescription>
-                                    Upload file ke kategori {category.name}. Maksimal ukuran file 20MB.
+                                    Upload file ke kategori {category.name}. Maksimal ukuran file 50MB.
                                 </DialogDescription>
                             </DialogHeader>
                             <FileUploadForm 

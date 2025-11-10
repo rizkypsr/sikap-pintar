@@ -1,0 +1,45 @@
+{
+    # Global options
+    auto_https off
+    admin off
+}
+
+:8000 {
+    root * /app/public
+
+    # Increase upload limits - using PHP directives
+    php_value upload_max_filesize 50M
+    php_value post_max_size 50M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+    php_value file_uploads On
+    php_value max_file_uploads 20
+
+    # Logging
+    log {
+        output file /app/storage/logs/caddy.log
+        level INFO
+    }
+
+    # Laravel rewrite rules
+    @laravel {
+        not file {path}
+    }
+    rewrite @laravel /index.php{uri}
+
+    # Handle PHP files through FrankenPHP
+    php {
+        root /app/public
+        index index.php
+    }
+
+    # Security headers
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        X-XSS-Protection "1; mode=block"
+    }
+
+    # File upload handling
+    request_body_max_size 50MB
+}
